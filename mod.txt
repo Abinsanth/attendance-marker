@@ -1,0 +1,226 @@
+<!-- Project: Attendance Website using HTML, CSS, JS, Firebase -->
+
+<!-- index.html (Login Page) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <h2>Teacher Login</h2>
+  <form id="loginForm">
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+  <script src="js/firebase.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>
+
+<!-- dashboard.html (Teacher Dashboard) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <h2>Welcome, <span id="userEmail"></span></h2>
+  <select id="listDropdown"></select>
+  <button onclick="takeAttendance()">Take Attendance</button>
+  <button onclick="location.href='add-list.html'">Add/Modify List</button>
+  <script src="js/firebase.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
+
+<!-- add-list.html (List Manager) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage List</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <h2>Manage Your Lists</h2>
+  <input type="text" id="listName" placeholder="List Name">
+  <textarea id="rollNumbers" placeholder="Enter roll numbers separated by comma"></textarea>
+  <button onclick="saveList()">Save List</button>
+  <button onclick="loadLists()">Load Lists</button>
+  <div id="listsContainer"></div>
+  <script src="js/firebase.js"></script>
+  <script src="js/list.js"></script>
+</body>
+</html>
+
+<!-- take-attendance.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Take Attendance</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <h2>Taking Attendance</h2>
+  <div id="rollNumberDisplay"></div>
+  <button class="present" onclick="markPresent()">✔ Present</button>
+  <button class="absent" onclick="markAbsent()">✘ Absent</button>
+  <div id="resultSection" style="display:none">
+    <h3>Present</h3>
+    <pre id="presentList"></pre>
+    <button onclick="copyText('presentList')">Copy Present</button>
+    <h3>Absent</h3>
+    <pre id="absentList"></pre>
+    <button onclick="copyText('absentList')">Copy Absent</button>
+    <p id="currentDate"></p>
+  </div>
+  <script src="js/attendance.js"></script>
+</body>
+</html>
+
+/* css/styles.css */
+body { font-family: Arial; padding: 20px; }
+input, textarea, button, select { display: block; margin: 10px 0; padding: 8px; }
+button.present { background-color: green; color: white; }
+button.absent { background-color: red; color: white; }
+pre { background: #f0f0f0; padding: 10px; }
+
+/* js/firebase.js */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window.auth = auth;
+window.db = db;
+
+/* js/auth.js */
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  try {
+    await firebase.auth().signInWithEmailAndPassword(email, password);
+    window.location.href = 'dashboard.html';
+  } catch (error) {
+    alert(error.message);
+  }
+});
+
+/* js/dashboard.js */
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('userEmail').textContent = user.email;
+    loadListDropdown(user.email);
+  } else {
+    window.location.href = 'index.html';
+  }
+});
+
+async function loadListDropdown(email) {
+  const doc = await db.collection('teachers').doc(email).get();
+  const data = doc.data();
+  const dropdown = document.getElementById('listDropdown');
+  dropdown.innerHTML = '';
+  if (data && data.lists) {
+    for (const listName in data.lists) {
+      const option = document.createElement('option');
+      option.value = listName;
+      option.textContent = listName;
+      dropdown.appendChild(option);
+    }
+  }
+}
+
+function takeAttendance() {
+  const selected = document.getElementById('listDropdown').value;
+  localStorage.setItem('selectedList', selected);
+  window.location.href = 'take-attendance.html';
+}
+
+/* js/list.js */
+async function saveList() {
+  const user = firebase.auth().currentUser;
+  const listName = document.getElementById('listName').value;
+  const rollNumbers = document.getElementById('rollNumbers').value.split(',').map(s => s.trim());
+  if (!listName || rollNumbers.length === 0) return alert('Please enter list name and roll numbers');
+  await db.collection('teachers').doc(user.email).set({
+    lists: { [listName]: rollNumbers }
+  }, { merge: true });
+  alert('List saved!');
+}
+
+async function loadLists() {
+  const user = firebase.auth().currentUser;
+  const doc = await db.collection('teachers').doc(user.email).get();
+  const data = doc.data();
+  const container = document.getElementById('listsContainer');
+  container.innerHTML = '';
+  for (const list in data.lists) {
+    container.innerHTML += `<p><b>${list}</b>: ${data.lists[list].join(', ')}</p>`;
+  }
+}
+
+/* js/attendance.js */
+const selectedList = localStorage.getItem('selectedList');
+const user = firebase.auth().currentUser;
+const present = [], absent = [];
+let rollNumbers = [], index = 0;
+
+firebase.auth().onAuthStateChanged(async user => {
+  const doc = await db.collection('teachers').doc(user.email).get();
+  rollNumbers = doc.data().lists[selectedList];
+  showNext();
+});
+
+function showNext() {
+  if (index >= rollNumbers.length) return showResult();
+  document.getElementById('rollNumberDisplay').textContent = rollNumbers[index];
+}
+
+function markPresent() { present.push(rollNumbers[index++]); showNext(); }
+function markAbsent() { absent.push(rollNumbers[index++]); showNext(); }
+
+function showResult() {
+  document.getElementById('rollNumberDisplay').style.display = 'none';
+  document.getElementById('resultSection').style.display = 'block';
+  document.getElementById('presentList').textContent = present.join(', ');
+  document.getElementById('absentList').textContent = absent.join(', ');
+  document.getElementById('currentDate').textContent = `Date: ${new Date().toLocaleDateString()}`;
+}
+
+function copyText(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+}
+
+List: web CS 22-26
+Date: 8/9/2025
+
+Present:
+1, 3, 4, 5, 6, 7, 10
+
+Absent:
+2, 8, 9

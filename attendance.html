@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Take Attendance</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <h1>Take Attendance</h1>
+      <div class="button-group">
+        <a href="dashboard.html" class="btn outline">Back</a>
+        <button id="btn-logout" class="btn small">Logout</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="card center">
+        <div class="roll-grid hidden" id="roll-button-group">
+          </div>
+
+        <div id="attendance-actions" class="row attendance-buttons">
+          <button id="btn-done" class="btn">Done</button>
+        </div>
+      </div>
+
+      <div id="resultSection" class="card hidden">
+        <h3>Results — <span id="listNameTitle"></span></h3>
+        <p><strong>Date:</strong> <span id="currentDate"></span></p>
+
+        <section class="result-list-section">
+          <h4>Present</h4>
+          <pre id="presentList" class="roll-list"></pre>
+        </section>
+
+        <section class="result-list-section">
+          <h4>Absent</h4>
+          <pre id="absentList" class="roll-list"></pre>
+        </section>
+        
+        <button id="copyAll" class="btn">Copy All</button>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="js/firebase.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/attendance.js"></script>
+</body>
+</html>

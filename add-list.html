@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Add / Manage Lists</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <h1>Manage Lists</h1>
+      <div class="button-group">
+        <a href="dashboard.html" class="btn outline">Back</a>
+        <button id="btn-logout" class="btn small">Logout</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="card">
+        <form id="list-form">
+          <label for="listName">List name</label>
+          <input id="listName" placeholder="e.g. CS-1 (2025)" required />
+          <label for="rollNumbers">Roll numbers (comma separated)</label>
+          <textarea id="rollNumbers" rows="4" placeholder="101,102,103" required></textarea>
+          <div class="row">
+            <button type="submit" id="btn-save" class="btn">Save / Update</button>
+            <button type="reset" id="btn-clear" class="btn outline">Clear</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Your saved lists</h3>
+        <div id="savedLists" class="saved-lists"></div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="js/firebase.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/list.js"></script>
+</body>
+</html>
