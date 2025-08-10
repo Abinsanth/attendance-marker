@@ -5,7 +5,8 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  updateProfile
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 import { doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
@@ -97,9 +98,15 @@ if (signupForm) {
 
     msgEl.textContent = "Creating account...";
     msgEl.style.color = "initial";
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+      // Update Firebase Auth profile displayName
+      await updateProfile(user, {
+        displayName: name
+      });
 
       // Save user's name to Firestore
       await setDoc(doc(db, "teachers", user.uid), {
@@ -113,11 +120,12 @@ if (signupForm) {
       setTimeout(() => location.href = "dashboard.html", 1000);
     } catch (err) {
       msgEl.style.color = "crimson";
-      if(err.code === "auth/email-already-in-use") msgEl.textContent = "User already exists — please login.";
+      if (err.code === "auth/email-already-in-use") msgEl.textContent = "User already exists — please login.";
       else msgEl.textContent = err.message;
     }
   });
 }
+
 
 // Forgot password
 if (forgotForm) {
@@ -125,35 +133,25 @@ if (forgotForm) {
     e.preventDefault();
     const email = document.getElementById("forgot-email").value.trim();
     if (!email) {
-      msgEl.textContent = "Enter your email to reset password";
-      return;
-    }
-    
-    try {
-      const emailExists = await isEmailRegistered(email);
-      if (!emailExists) {
-        msgEl.style.color = "crimson";
-        msgEl.textContent = "This email is not registered. Please sign up.";
-        return;
-      }
-    } catch (error) {
       msgEl.style.color = "crimson";
-      msgEl.textContent = `An error occurred: ${error.message}`;
+      msgEl.textContent = "Enter your email to reset password";
       return;
     }
     
     msgEl.textContent = "Sending reset link...";
     msgEl.style.color = "initial";
+
     try {
       await sendPasswordResetEmail(auth, email);
       msgEl.style.color = "green";
-      msgEl.textContent = "Reset link sent to your email.";
+      msgEl.textContent = "If an account with this email exists, a reset link has been sent.";
     } catch (err) {
       msgEl.style.color = "crimson";
       msgEl.textContent = err.message;
     }
   });
 }
+
 
 // Exported helper functions for other pages
 export async function logoutUser(){

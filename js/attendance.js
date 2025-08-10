@@ -136,7 +136,7 @@ function copyAllText() {
   const absentText = absentListEl.textContent;
   const listNameText = listNameTitle.textContent;
 
-  const textToCopy = `List: ${listNameText}\nDate: ${date}\n\nPresent:\n${presentText}\n\nAbsent:\n${absentText}`;
+  const textToCopy = `Batch: ${listNameText}\nDate: ${date}\n\nPresent:\n${presentText}\n\nAbsent:\n${absentText}`;
 
   navigator.clipboard.writeText(textToCopy).then(() => {
     alert("Copied all attendance data to clipboard!");

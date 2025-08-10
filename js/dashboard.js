@@ -1,4 +1,3 @@
-// js/dashboard.js
 import { auth, db } from "./firebase.js";
 import { logoutUser, checkAuthRedirect } from "./auth.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
@@ -29,21 +28,24 @@ if (takeAttendanceForm) {
 
 onAuthStateChanged(auth, async user => {
   if(!user) return;
-  
+
   const docRef = doc(db, "teachers", user.uid);
   try {
     const snapshot = await getDoc(docRef);
     if (snapshot.exists()) {
       const data = snapshot.data();
-      // Display the user's name if available
-      if (dashboardHeader) dashboardHeader.textContent = `Welcome, ${data.name || user.email.split('@')[0]}!`;
+      console.log("Firestore user data:", data);
+
+      // Display user's name from Firestore, fallback to Auth displayName, then email prefix
+      const displayName = data.name || user.displayName || user.email.split('@')[0];
+      if (dashboardHeader) dashboardHeader.textContent = `Welcome, ${displayName}`;
       if (userEmailEl) userEmailEl.textContent = user.email;
 
       const lists = data.lists || {};
       const listNames = Object.keys(lists);
       if (listDropdown) listDropdown.innerHTML = `<option value="" disabled selected>-- Select a list --</option>`;
       if (listsPreview) listsPreview.innerHTML = "";
-      
+
       if (listNames.length > 0) {
         for(const name in lists){
           if (listDropdown) {
@@ -63,7 +65,8 @@ onAuthStateChanged(auth, async user => {
         if (listsPreview) listsPreview.innerHTML = "<p class='muted'>No lists yet. Create one.</p>";
       }
     } else {
-      if (dashboardHeader) dashboardHeader.textContent = `Welcome!`;
+      const displayName = user.displayName || user.email.split('@')[0];
+      if (dashboardHeader) dashboardHeader.textContent = `Welcome, ${displayName}`;
       if (userEmailEl) userEmailEl.textContent = user.email;
       if (listsPreview) listsPreview.innerHTML = "<p class='muted'>No lists yet. Create one.</p>";
     }
